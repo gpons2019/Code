@@ -37,46 +37,50 @@ PAGE = """
 </html>
 """
 
-def parse_args ():
+
+def parse_args():
     parser = argparse.ArgumentParser(description="Simple HTTP Server")
     parser.add_argument('-p', '--port', type=int, default=PORT,
                         help="TCP port for the server")
     args = parser.parse_args()
     return args
 
+
 class Handler(http.server.BaseHTTPRequestHandler):
 
-    def do_GET(self):
+    def do_GET(self):  # Dentro del Handler solo modificamos el apartado "do_GET"
 
         print("Received: GET " + self.path)
-        parsed_resource = urllib.parse.urlparse(self.path)
+        parsed_resource = urllib.parse.urlparse(self.path)  # El "self.path" contiene la dirección del archivo
 
         self.send_response(200)
         self.send_header("Content-type", "text/html")
 
         cookies = http.cookies.SimpleCookie(self.headers.get('Cookie'))
 
-        in_cookie = ""
-        if 'yousaid' in cookies:
-            in_cookie = "In cookie: " + cookies['yousaid'].value
+        in_cookie = ""  # Con esto suponemos que no se manda nada
+        if 'yousaid' in cookies:  # Si hay alguna cookie enviada, entramos aqui para escribir la cookie "In Cookie"
+            in_cookie = "In cookie: " + cookies['yousaid'].value  # Escribimos en el navegador el valor de la cookie
 
-        you_said = ""
+        you_said = ""  # Con esto suponemos que no se manda nada
         if parsed_resource.query:
-            qs = urllib.parse.parse_qs(parsed_resource.query)
-            if 'something' in qs:
-                you_said = "You said: " + qs['something'][0]
+            qs = urllib.parse.parse_qs(parsed_resource.query)  # Acceso a los valores de la "query string"
+            if 'something' in qs:  # Si hay algo en la "query string", entramos aquí para escribir la cookie "You Said"
+                you_said = "You said: " + qs['something'][0]  # Escribimos en el navegador el valor de la cookie
                 cookie = http.cookies.SimpleCookie()
-                cookie['yousaid'] = qs['something'][0]
-                self.send_header("Set-Cookie", cookie.output(header='', sep=''))
+                cookie['yousaid'] = qs['something'][0]  # Rellenamos la cookie con lo que hemos escrito
+                self.send_header("Set-Cookie", cookie.output(header='', sep=''))  # Enviamos la cookie
 
         self.end_headers()
         self.wfile.write(bytes(PAGE.format(you_said, in_cookie), 'utf-8'))
 
+
 def main():
-    args = parse_args()
-    with socketserver.TCPServer(("", args.port), Handler) as MyServer:
+    args = parse_args()  # Esto únicamente sirve para meter el parámetro del puerto "-p"
+    with socketserver.TCPServer(("", args.port), Handler) as MyServer:  # Inicialización del servidor
         print("serving at port", args.port)
-        MyServer.serve_forever()
+        MyServer.serve_forever()  # Meto al servidor en bucle indefinido para escuchar las peticiones
+
 
 if __name__ == "__main__":
     main()
